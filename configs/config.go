@@ -38,10 +38,6 @@ func GetConfig() Config {
 }
 
 func loadConfig() {
-	if err := env.Parse(&configuration); err != nil {
-		log.Printf("warning parse env: %v", err)
-	}
-
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yaml")
@@ -69,6 +65,11 @@ func loadConfig() {
 				v.Elem().FieldByName(field.Name).SetInt(int64(iVal))
 			}
 		}
+	}
+
+	// env vars have highest priority for deployment/runtime configuration.
+	if err := env.Parse(&configuration); err != nil {
+		log.Printf("warning parse env: %v", err)
 	}
 
 	if configuration.HTTPPort == "" {

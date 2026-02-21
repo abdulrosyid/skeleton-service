@@ -54,3 +54,16 @@ CREATE TABLE users (
 go mod tidy
 go run .
 ```
+
+## Run with Docker (App + MySQL)
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Check status:
+```bash
+docker compose ps
+docker logs -f myapp
+curl http://localhost:8080/health
+```

@@ -1,9 +1,46 @@
 version: "3.9"
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: myapp-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-skeleton_db}
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-appsecret}
+      TZ: Asia/Jakarta
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./deploy/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${MYSQL_USER:-appuser} -p${MYSQL_PASSWORD:-appsecret} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   myapp:
     build: .
     container_name: myapp
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-appsecret}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-skeleton_db}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-change-me}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
+      TZ: Asia/Jakarta
     ports:
       - "8080:8080"
     restart: always
+
+volumes:
+  mysql_data:
